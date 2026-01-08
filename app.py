@@ -3,6 +3,8 @@ import pandas as pd
 from autogluon.tabular import TabularPredictor
 import os
 from preprocess import load_and_clean_data
+from train_model import train_and_save_model, model_exists
+
 
 
 st.set_page_config(page_title="Cancer Predict", layout="centered")
@@ -44,8 +46,13 @@ def get_latest_model_path(base_dir="AutogluonModels"):
 
 @st.cache_resource
 def load_model():
-    model_path = get_latest_model_path()
-    return TabularPredictor.load(model_path)
+    if not model_exists():
+        with st.spinner("Training model for the first time..."):
+            return train_and_save_model()
+    else:
+        model_path = get_latest_model_path()
+        return TabularPredictor.load(model_path)
+
 
 
 predictor = load_model()
