@@ -7,10 +7,13 @@ DATA_PATH = "data/lung_cancer_dataset.csv"
 MODEL_DIR = "AutogluonModels"
 
 
+import shutil
+
 def model_exists():
-    return os.path.exists(MODEL_DIR) and any(
-        d.startswith("ag-") for d in os.listdir(MODEL_DIR)
-    )
+    if os.path.exists(MODEL_DIR):
+        shutil.rmtree(MODEL_DIR)
+    return False
+
 
 
 def train_and_save_model():
