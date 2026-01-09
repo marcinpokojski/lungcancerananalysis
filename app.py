@@ -1,16 +1,17 @@
 import streamlit as st
 import pandas as pd
-
 import os
-from preprocess import load_and_clean_data
+import subprocess
 import joblib
 
+from preprocess import load_and_clean_data
 
+MODEL_PATH = "model.joblib"
 
-import subprocess
-
-if not os.path.exists("model.joblib"):
+# train model on first startup (free Render workaround)
+if not os.path.exists(MODEL_PATH):
     subprocess.run(["python", "train.py"], check=True)
+
 
 
 st.set_page_config(page_title="Cancer Predict", layout="centered")
@@ -52,10 +53,11 @@ def get_latest_model_path(base_dir="AutogluonModels"):
 
 @st.cache_resource
 def load_model():
-    data = joblib.load("model.joblib")
+    data = joblib.load(MODEL_PATH)
     return data["model"], data["features"]
 
 predictor, feature_columns = load_model()
+
 
 
 

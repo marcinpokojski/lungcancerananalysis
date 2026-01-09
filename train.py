@@ -26,16 +26,14 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y
 )
 
-# models (pipelines)
 models = {
     "logreg": Pipeline([
         ("scaler", StandardScaler()),
         ("clf", LogisticRegression(
             max_iter=1000,
-            class_weight="balanced"  # important for medical data
+            class_weight="balanced"
         ))
     ]),
-
     "rf": RandomForestClassifier(
         n_estimators=300,
         max_depth=10,
@@ -43,7 +41,6 @@ models = {
         class_weight="balanced",
         random_state=42
     ),
-
     "gb": GradientBoostingClassifier(
         n_estimators=200,
         learning_rate=0.05,
@@ -53,24 +50,16 @@ models = {
 
 results = {}
 
-# train + evaluate
 for name, model in models.items():
     model.fit(X_train, y_train)
     y_proba = model.predict_proba(X_test)[:, 1]
     roc = roc_auc_score(y_test, y_proba)
-
     results[name] = (roc, model)
     print(f"{name}: ROC-AUC = {roc:.4f}")
 
-# pick best
-best_name, (best_roc, best_model) = max(
-    results.items(),
-    key=lambda x: x[1][0]
-)
-
+best_name, (best_roc, best_model) = max(results.items(), key=lambda x: x[1][0])
 print(f"\nBest model: {best_name} (ROC-AUC={best_roc:.4f})")
 
-# save model + feature order
 joblib.dump(
     {
         "model": best_model,
