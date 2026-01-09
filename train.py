@@ -1,67 +1,82 @@
 import pandas as pd
-from autogluon.tabular import TabularPredictor
+import joblib
+
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+
 from preprocess import load_and_clean_data
 
-#path for dataset
 DATA_PATH = "data/lung_cancer_dataset.csv"
 
+# load + preprocess
+df = load_and_clean_data(DATA_PATH)
 
-if __name__ == "__main__":
-    # Load and preprocess data
-    df = load_and_clean_data(DATA_PATH)
+X = df.drop(columns=["lung_cancer"])
+y = df["lung_cancer"]
 
-    # Train / test split (80 training, 20 test)
-    train_df, test_df = train_test_split(
-        df,
-        test_size=0.2,
-        random_state=42,
-        stratify=df["lung_cancer"]
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+# models (pipelines)
+models = {
+    "logreg": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", LogisticRegression(
+            max_iter=1000,
+            class_weight="balanced"  # important for medical data
+        ))
+    ]),
+
+    "rf": RandomForestClassifier(
+        n_estimators=300,
+        max_depth=10,
+        min_samples_leaf=5,
+        class_weight="balanced",
+        random_state=42
+    ),
+
+    "gb": GradientBoostingClassifier(
+        n_estimators=200,
+        learning_rate=0.05,
+        random_state=42
     )
+}
 
-    # train model
-    predictor = TabularPredictor(
-        label="lung_cancer",
-        problem_type="binary",
-        eval_metric="roc_auc"
-    ).fit(
-        train_df,
-        presets="medium_quality",
-        hyperparameters={
-            "GBM": {},
-            "CAT": {},
-            "NN_TORCH": {},
-        }
-    )
+results = {}
 
-    #evaluate model
-    from sklearn.metrics import (
-        accuracy_score,
-        precision_score,
-        recall_score,
-        f1_score,
-        roc_auc_score
-    )
+# train + evaluate
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    y_proba = model.predict_proba(X_test)[:, 1]
+    roc = roc_auc_score(y_test, y_proba)
 
-    y_true = test_df["lung_cancer"]
-    X_test = test_df.drop(columns=["lung_cancer"])
+    results[name] = (roc, model)
+    print(f"{name}: ROC-AUC = {roc:.4f}")
 
-    y_pred = predictor.predict(X_test)
-    y_proba = predictor.predict_proba(X_test)[1]
+# pick best
+best_name, (best_roc, best_model) = max(
+    results.items(),
+    key=lambda x: x[1][0]
+)
 
-    metrics = {
-        "accuracy": accuracy_score(y_true, y_pred),
-        "precision": precision_score(y_true, y_pred),
-        "recall": recall_score(y_true, y_pred),
-        "f1": f1_score(y_true, y_pred),
-        "roc_auc": roc_auc_score(y_true, y_proba),
-    }
+print(f"\nBest model: {best_name} (ROC-AUC={best_roc:.4f})")
 
-    print("Evaluation metrics:")
-    for k, v in metrics.items():
-        print(f"{k}: {v:.4f}")
+# save model + feature order
+joblib.dump(
+    {
+        "model": best_model,
+        "features": X.columns.tolist()
+    },
+    "model.joblib"
+)
 
-    print("Model trained and saved automatically by AutoGluon.")
-
-    leaderboard = predictor.leaderboard(test_df, silent=True)
-    print(leaderboard)
+print("Model saved to model.joblib")

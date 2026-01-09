@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
-from autogluon.tabular import TabularPredictor
+
 import os
 from preprocess import load_and_clean_data
-from train_model import train_and_save_model, model_exists
+import joblib
+
 
 
 
@@ -46,16 +47,12 @@ def get_latest_model_path(base_dir="AutogluonModels"):
 
 @st.cache_resource
 def load_model():
-    if not model_exists():
-        with st.spinner("Training model for the first time..."):
-            return train_and_save_model()
-    else:
-        model_path = get_latest_model_path()
-        return TabularPredictor.load(model_path)
+    data = joblib.load("model.joblib")
+    return data["model"], data["features"]
+
+predictor, feature_columns = load_model()
 
 
-
-predictor = load_model()
 
 
 if "page" not in st.session_state:
@@ -79,9 +76,8 @@ st.divider()
 
 if page == "Home":
     st.title("Lung Cancer Risk Estimation Tool")
-    st.write("Model path:", predictor.path)
-    st.write("Best model name:", predictor.model_best)
-
+    st.write("Model file:", "model.joblib")
+    st.write("Model type:", type(predictor).__name__)
 
     st.divider()
 
@@ -157,26 +153,21 @@ if page == "Prediction":
         input_df = pd.DataFrame([{
             "age": age,
             "pack_years": pack_years,
-            "asbestos_exposure": int(asbestos_exposure),
-            "secondhand_smoke_exposure": int(secondhand_smoke_exposure),
-            "copd_diagnosis": int(copd_diagnosis),
-            "family_history": int(family_history),
-            "alcohol_consumption": (
-                0 if alcohol_consumption == "none"
-                else 1 if alcohol_consumption == "moderate"
-                else 2
-            ),
-            "radon_exposure": (
-                0 if radon_exposure == "low"
-                else 1 if radon_exposure == "medium"
-                else 2
-            ),
-            "gender": gender
+            "gender": gender,  # "male" / "female"
+            "radon_exposure": radon_exposure,  # "low" / "medium" / "high"
+            "asbestos_exposure": "yes" if asbestos_exposure else "no",
+            "secondhand_smoke_exposure": "yes" if secondhand_smoke_exposure else "no",
+            "copd_diagnosis": "yes" if copd_diagnosis else "no",
+            "alcohol_consumption": alcohol_consumption,  # "none" / "moderate" / "heavy"
+            "family_history": "yes" if family_history else "no"
         }])
 
         input_df = load_and_clean_data(input_df)
-        prediction = predictor.predict(input_df).iloc[0]
-        probability = predictor.predict_proba(input_df).iloc[0][1]
+        input_df = input_df[feature_columns]
+
+
+        prediction = predictor.predict(input_df)[0]
+        probability = predictor.predict_proba(input_df)[0][1]
 
         if prediction == 1:
             st.error(f"Model predicts: YES (risk = {probability:.1%})")
