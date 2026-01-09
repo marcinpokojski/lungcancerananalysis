@@ -7,6 +7,11 @@ import joblib
 
 
 
+import subprocess
+
+if not os.path.exists("model.joblib"):
+    subprocess.run(["python", "train.py"], check=True)
+
 
 st.set_page_config(page_title="Cancer Predict", layout="centered")
 
