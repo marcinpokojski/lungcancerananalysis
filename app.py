@@ -6,6 +6,20 @@ import joblib
 
 from preprocess import load_and_clean_data
 
+
+import sys
+import sklearn
+import joblib
+import pandas as pd
+import numpy as np
+
+print("Python:", sys.version)
+print("scikit-learn:", sklearn.__version__)
+print("joblib:", joblib.__version__)
+print("pandas:", pd.__version__)
+print("numpy:", np.__version__)
+
+
 MODEL_PATH = "model.joblib"
 
 # train model on first startup (free Render workaround)
