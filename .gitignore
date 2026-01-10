@@ -226,6 +226,5 @@ conda-meta/
 
 # Autogluon leftovers
 AutogluonModels/
-model.joblib
 
 
