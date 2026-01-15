@@ -35,11 +35,42 @@ st.divider()
 
 if st.session_state["page"] == "Home":
     st.title("Lung Cancer Risk Estimation Tool")
+    st.write("Model file:", "model.joblib")
+    st.write("Model type:", type(predictor).__name__)
+
+    st.divider()
+
+    st.markdown("""
+        <div style="border:1px solid #444; padding:15px; border-radius:10px; margin-bottom:15px;">
+            <h3>O Nas</h3>
+            Franciszek Gruszecki s27619 <br>
+            Marcin Pokojsku s26779
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style="border:1px solid #444; padding:15px; border-radius:10px; margin-bottom:15px;">
+            <h3>O projekcie</h3>
+            Aplikacja służy do szacowania ryzyka raka płuc na podstawie podstawowych
+            czynników zdrowotnych i środowiskowych z wykorzystaniem modelu uczenia maszynowego.
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style="border:1px solid #444; padding:15px; border-radius:10px; margin-bottom:15px;">
+            <h3>Dataset</h3>
+            Dataset pochodzi z serwisu Kaggle i zawiera dane dotyczące czynników ryzyka raka płuc.
+            <br>
+            <a href="https://www.kaggle.com/code/finlaymcandrew/lung-cancer-risk-analysis/input" target="_blank">
+                Link do datasetu
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
 if st.session_state["page"] == "Prediction":
     st.title("Cancer Risk Prediction")
 
-    age = st.slider("Age", 1, 100, 30)
+    age = st.slider("Age", 18, 100, 50)
     gender = st.selectbox("Sex", ["male", "female"])
     pack_years = st.slider("Pack years", 0, 100, 0)
     radon_exposure = st.selectbox("Radon exposure", ["low", "medium", "high"])
