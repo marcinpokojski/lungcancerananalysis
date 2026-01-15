@@ -1,6 +1,4 @@
-import pandas as pd
 import joblib
-
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 from sklearn.pipeline import Pipeline
@@ -8,11 +6,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
-from preprocess import load_and_clean_data
+from data_preprocess import load_and_clean_data
+import data_preprocess
+print(data_preprocess.__file__)
+
 
 DATA_PATH = "data/lung_cancer_dataset.csv"
 
-# load + preprocess
 df = load_and_clean_data(DATA_PATH)
 
 X = df.drop(columns=["lung_cancer"])
@@ -29,10 +29,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 models = {
     "logreg": Pipeline([
         ("scaler", StandardScaler()),
-        ("clf", LogisticRegression(
-            max_iter=1000,
-            class_weight="balanced"
-        ))
+        ("clf", LogisticRegression(max_iter=1000, class_weight="balanced"))
     ]),
     "rf": RandomForestClassifier(
         n_estimators=300,
@@ -58,7 +55,7 @@ for name, model in models.items():
     print(f"{name}: ROC-AUC = {roc:.4f}")
 
 best_name, (best_roc, best_model) = max(results.items(), key=lambda x: x[1][0])
-print(f"\nBest model: {best_name} (ROC-AUC={best_roc:.4f})")
+print(f"Best model: {best_name} ({best_roc:.4f})")
 
 joblib.dump(
     {
@@ -67,5 +64,3 @@ joblib.dump(
     },
     "model.joblib"
 )
-
-print("Model saved to model.joblib")

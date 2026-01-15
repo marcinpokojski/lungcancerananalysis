@@ -1,25 +1,23 @@
+from pathlib import Path
 import pandas as pd
 
 def load_and_clean_data(data) -> pd.DataFrame:
-    # csv for training, df for streamlit
     if isinstance(data, pd.DataFrame):
         df = data.copy()
-    else:
+    elif isinstance(data, (str, Path)):
         df = pd.read_csv(data)
+    else:
+        raise TypeError(type(data))
 
-    # remove patient_id (PII + no predictive value)
     if 'patient_id' in df.columns:
         df = df.drop(columns=['patient_id'])
 
-    # numeric columns
     numeric_cols = ['age', 'pack_years']
-
     for col in numeric_cols:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
             df[col] = df[col].fillna(df[col].median())
 
-    # binary variables (explicit mapping)
     binary_cols = [
         'asbestos_exposure',
         'secondhand_smoke_exposure',
@@ -31,15 +29,13 @@ def load_and_clean_data(data) -> pd.DataFrame:
     for col in binary_cols:
         if col in df.columns:
             df[col] = (
-                df[col]
-                .astype(str)
+                df[col].astype(str)
                 .str.lower()
                 .map({'yes': 1, 'no': 0})
                 .fillna(0)
                 .astype(int)
             )
 
-    # ordinal features with real ordering
     if 'alcohol_consumption' in df.columns:
         df['alcohol_consumption'] = (
             df['alcohol_consumption']
@@ -60,7 +56,6 @@ def load_and_clean_data(data) -> pd.DataFrame:
             .astype(int)
         )
 
-    # gender (binary, not ordinal)
     if 'gender' in df.columns:
         df['gender'] = (
             df['gender']
