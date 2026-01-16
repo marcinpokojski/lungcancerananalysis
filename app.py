@@ -107,4 +107,4 @@ if st.session_state["page"] == "Prediction":
         if prediction == 1:
             st.error(f"YES ({probability:.1%})")
         else:
-            st.success(f"NO ({probability:.1%})")
+            st.success(f"NO")
