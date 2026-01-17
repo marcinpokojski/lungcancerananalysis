@@ -16,9 +16,14 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 from data_preprocess import load_and_clean_data
+from data_preprocess import generate_plots
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
+
+
+#wykres cofusion matrix
 def plot_confusion_matrix(cm, model_name, threshold):
     plt.figure(figsize=(6, 5))
 
@@ -43,6 +48,36 @@ def plot_confusion_matrix(cm, model_name, threshold):
 
     print(f"Confusion matrix saved to: {filename}")
 
+#wykres feature importance
+def plot_gb_feature_importance(model, feature_names):
+
+    importance = model.feature_importances_
+
+    fi = (
+        pd.DataFrame({
+            "feature": feature_names,
+            "importance": importance
+        })
+        .sort_values(by="importance", ascending=False)
+    )
+
+    fi.plot(
+        kind="bar",
+        x="feature",
+        y="importance",
+        legend=False,
+        figsize=(10, 5)
+    )
+
+    plt.title("Feature importance – Gradient Boosting")
+    plt.ylabel("Importance")
+    plt.tight_layout()
+
+    filename = f"feature_importance.png"
+    plt.savefig(filename, dpi=300)
+    plt.close()
+
+    print(f"GB feature importance saved to: {filename}")
 
 
 # Ladowanie i Preprocessing
@@ -50,6 +85,8 @@ def plot_confusion_matrix(cm, model_name, threshold):
 DATA_PATH = "data/lung_cancer_dataset.csv"
 
 df = load_and_clean_data(DATA_PATH)
+
+generate_plots(df)
 
 X = df.drop(columns=["lung_cancer"])
 y = df["lung_cancer"]
@@ -149,7 +186,7 @@ final_y_pred = (y_proba >= best_threshold).astype(int)
 final_cm = confusion_matrix(y_test, final_y_pred)
 
 plot_confusion_matrix(final_cm, best_model_name, best_threshold)
-
+plot_gb_feature_importance(best_model, X.columns.tolist())
 
 
 # Zapisanie finalnego modelu

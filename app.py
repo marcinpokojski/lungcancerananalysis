@@ -35,8 +35,8 @@ st.divider()
 
 if st.session_state["page"] == "Home":
     st.title("Lung Cancer Risk Estimation Tool")
-    st.write("Model file:", "model.joblib")
-    st.write("Model type:", type(predictor).__name__)
+    st.write("Model został wgrany z pliku:", "model.joblib")
+    st.write("Użyty model do predykcji:", type(predictor).__name__)
 
     st.divider()
 
@@ -44,7 +44,7 @@ if st.session_state["page"] == "Home":
         <div style="border:1px solid #444; padding:15px; border-radius:10px; margin-bottom:15px;">
             <h3>O Nas</h3>
             Franciszek Gruszecki s27619 <br>
-            Marcin Pokojsku s26779
+            Marcin Pokojski s26779
         </div>
         """, unsafe_allow_html=True)
 
